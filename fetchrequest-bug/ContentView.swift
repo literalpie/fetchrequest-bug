@@ -7,6 +7,7 @@
 
 import CoreData
 import SwiftUI
+internal import Combine
 
 /// 1. Launching the app for the first time, then creating an item, then pressing the 'add' button __works as expected__.
 /// 2. re-launching (build in xcode or kill and re-launch) the app,, and pressing the "add" button on any item works only once, then __does not show changes__.
@@ -24,9 +25,12 @@ struct ContentView: View {
   )
   private var items: FetchedResults<Item>
 
+  @State var update: Bool = false
+
   var body: some View {
     NavigationView {
       List {
+        Text(update ? "True" : "False")
         ForEach(items) { item in
           NavigationLink {
             VStack {
@@ -43,6 +47,13 @@ struct ContentView: View {
         }
         .onDelete(perform: deleteItems)
       }
+      // The issue can be worked around by uncommenting this.
+      // objectWillChange always gets notified of the event as expected, so when that happens,
+      // we can toggle a "noop" predicate between two equivilent states, which forces the FetchRequest to update.
+//      .onReceive(items.publisher.flatMap(\.objectWillChange), perform: { _ in
+//        items.nsPredicate = update ? NSPredicate(value: true) : NSPredicate(format: "1 == 1")
+//        update.toggle()
+//      })
       .toolbar {
         ToolbarItem(placement: .navigationBarTrailing) {
           EditButton()
